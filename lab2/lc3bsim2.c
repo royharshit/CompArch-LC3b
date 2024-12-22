@@ -4,9 +4,9 @@
     REFER TO THE SUBMISSION INSTRUCTION FOR DETAILS
 
     Name 1: Harshit Roy 
-    Name 2: Margaret Lee
-    UTEID 1: hr9873
-    UTEID 2: ml55822 
+    Name 2:
+    UTEID 1:
+    UTEID 2: 
 */
 
 /***************************************************************/
