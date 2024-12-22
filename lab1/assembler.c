@@ -1,3 +1,11 @@
+/*
+    Name 1: Harshit Roy
+    Name 2: Margaret Lee
+    UTEID 1: hr9873
+    UTEID 2: ml55822  
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,21 +38,21 @@ int getAddress( char *label) {
             return symbolTable[i].address;
         }
     }
-        
-    return -1;    
-    
+
+    return -1;
+
 }
 
 int binaryToInt(const char *binaryString) {
     int result = 0;
     int length = strlen(binaryString);
-    
+
     for (int i = 0; i < length; i++) {
         if (binaryString[length - i - 1] == '1') {
             result += pow(2, i);
         }
     }
-    
+
     return result;
 }
 
@@ -83,7 +91,7 @@ int toNum( char * pStr )
 
                 return lNum;
         }
-        else if( *pStr == 'x' ) /* hex     */
+		else if( *pStr == 'x' ) /* hex     */
         {
                 pStr++;
                 if( *pStr == '-' )                              /* hex is negative */
@@ -153,7 +161,7 @@ int isOpcode (char *opcode) {
 
 int isPseudoOpcode(char *opcode) {
 
-        if (strcmp(opcode, ".fill") == 0) 
+        if (strcmp(opcode, ".fill") == 0)
             return 1;
         else
             return 0;
@@ -167,7 +175,7 @@ int convertRegToInt(char *reg) {
 
 }
 
-uint16_t encode_instruction_shf(char **dr, char **sr, char **amount, int b4, int b5) {
+uint16_t encode_instruction_shf(char **dr, char **sr, char **amount, int b5, int b4) {
 
     char *opcode="1101";
     uint16_t instruction = 0;
@@ -213,7 +221,7 @@ uint16_t encode_instruction_jsr(char **offset, int pc) {
     uint16_t instruction = 0;
     instruction += (binaryToInt(opcode) <<12);
     instruction += (1 <<11);
-    
+
     int address = getAddress(*offset);
     int offset_int;
 
@@ -227,7 +235,7 @@ uint16_t encode_instruction_jsr(char **offset, int pc) {
         instruction += offset_int;
     else
         instruction += offset_int + 2*(1<<10);
-    
+
     return instruction;
 }
 
@@ -240,7 +248,7 @@ uint16_t encode_instruction_jsrr(char **sr1) {
     int sr_int;
     sr_int = convertRegToInt(*sr1);
     instruction += (sr_int <<6);
- 
+
     return instruction;
 }
 
@@ -253,9 +261,9 @@ uint16_t encode_instruction_jmp(char **sr1) {
     int sr_int;
     sr_int = convertRegToInt(*sr1);
     instruction += (sr_int <<6);
- 
+
     return instruction;
-     
+
 }
 
 uint16_t encode_instruction_br(int n, int z, int p, char **offset, int pc) {
@@ -278,11 +286,11 @@ uint16_t encode_instruction_br(int n, int z, int p, char **offset, int pc) {
         offset_int = (address - pc)/2;
     }
 
-    if (offset_int > 0) 
+    if (offset_int > 0)
         instruction += offset_int;
     else
         instruction += offset_int + 2*(1<<8);
-    
+
     return instruction;
 
 }
@@ -299,21 +307,21 @@ uint16_t encode_instruction_lea(char** dr, char** offset, int pc) {
 
     int address = getAddress(*offset);
     int offset_int;
-    if (address != -1) 
+    if (address != -1)
         offset_int = (getAddress(*offset) - pc)/2;
     else
         offset_int = (toNum(*offset) -pc)/2;
 
     instruction += offset_int;
-    
-    return instruction; 
+
+    return instruction;
 }
 
 uint16_t encode_instruction_ldw(char *opcode, char** dr, char** sr, char** offset) {
 
     uint16_t instruction = 0;
     instruction += (binaryToInt(opcode) <<12);
-    
+
     int dr_int;
     dr_int = convertRegToInt(*dr);
     instruction += (dr_int <<9);
@@ -323,14 +331,14 @@ uint16_t encode_instruction_ldw(char *opcode, char** dr, char** sr, char** offse
     instruction += (sr_int <<6);
 
     int offset_int= toNum(*offset);
-   
+
     if (offset_int >= 0)
         instruction += offset_int;
     else
         instruction += offset_int + 2*(1 <<5);
- 
-    return instruction;  
-     
+
+    return instruction;
+
 }
 
 uint16_t encode_instruction_trap(char** trapvect) {
@@ -338,11 +346,11 @@ uint16_t encode_instruction_trap(char** trapvect) {
     uint16_t instruction = (binaryToInt("1111") <<  12);
 
     int trapvect_int = toNum(*trapvect);
-    
-    if (trapvect_int > 0) 
+
+    if (trapvect_int > 0)
         instruction += trapvect_int;
 
-    return instruction; 
+    return instruction;
 
 }
 
@@ -350,17 +358,17 @@ uint16_t encode_instruction_add(char *opcode, char** dr, char** sr1, char** sr2)
 
     uint16_t instruction = 0;
     instruction += (binaryToInt(opcode) <<12);
-   
-    int dr_int, sr1_int, sr2_int; 
+
+    int dr_int, sr1_int, sr2_int;
     dr_int = convertRegToInt(*dr);
     instruction += (dr_int <<9);
-    
-    sr1_int = convertRegToInt(*sr1); 
+
+    sr1_int = convertRegToInt(*sr1);
     instruction += (sr1_int <<6);
 
     if ( *sr2[0] == 'r') {
         sr2_int = convertRegToInt(*sr2);
-        instruction += sr2_int; 
+        instruction += sr2_int;
     } else {
         instruction += (1 <<5);
         sr2_int = toNum(*sr2);
@@ -433,17 +441,25 @@ Status readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpco
 
     *pArg4 = lPtr;
 
+
     return( OK );
 
 }
 
+void printHex(FILE *file_out, int num) {
+    if (num < 0) {
+        fprintf(file_out, "0x%04X\n", num & 0xFFFF);
+    } else {
+        fprintf(file_out, "0x%04X\n", num);
+    }
+}
 
 int main(int argc, char* argv[]) {
 
     char *prgName   = NULL;
     char *iFileName = NULL;
     char *oFileName = NULL;
-    
+
     prgName   = argv[0];
     iFileName = argv[1];
     oFileName = argv[2];
@@ -467,7 +483,7 @@ int main(int argc, char* argv[]) {
     do {
 
         Ret = readAndParse( file, Line, &Label, &Opcode, &Arg1, &Arg2, &Arg3, &Arg4 );
-        
+
         if( Ret != DONE && Ret != EMPTY_LINE )
         {
                 if (strcmp(Opcode, ".orig") == 0)
@@ -484,6 +500,7 @@ int main(int argc, char* argv[]) {
 
                 pc = pc + 2;
         }
+
 
     } while( Ret != DONE );
     // Close the file
@@ -513,70 +530,70 @@ int main(int argc, char* argv[]) {
         {
             if (strcmp(Opcode, ".orig") == 0) {
                 pc = toNum(Arg1);
-            } 
+            }
 
             if(strcmp(Opcode, ".orig")==0 | strcmp(Opcode, ".fill") == 0) {
-                fprintf(file_out, "0x%04X\n", toNum(Arg1));
+                printHex(file_out,  toNum(Arg1));
             } else if(strcmp(Opcode, "add")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_add("0001", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_add("0001", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "and")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_add("0101", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_add("0101", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "xor")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_add("1001", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_add("1001", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "lea")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_lea(&Arg1, &Arg2, pc));
+                printHex(file_out,  encode_instruction_lea(&Arg1, &Arg2, pc));
             } else if(strcmp(Opcode, "ldw")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_ldw("0110", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_ldw("0110", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "ldb")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_ldw("0010", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_ldw("0010", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "stw")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_ldw("0111", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_ldw("0111", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "stb")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_ldw("0011", &Arg1, &Arg2, &Arg3));
+                printHex(file_out,  encode_instruction_ldw("0011", &Arg1, &Arg2, &Arg3));
             } else if(strcmp(Opcode, "trap")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_trap(&Arg1));
+                printHex(file_out,  encode_instruction_trap(&Arg1));
             } else if(strcmp(Opcode, "halt")==0) {
                 char *trapvec="x25";
-                fprintf(file_out, "0x%04X\n", encode_instruction_trap(&trapvec));
-            } else if(strcmp(Opcode, "br")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(1, 1, 1, &Arg1, pc));
+                printHex(file_out,  encode_instruction_trap(&trapvec));
+			} else if(strcmp(Opcode, "br")==0) {
+                printHex(file_out,  encode_instruction_br(1, 1, 1, &Arg1, pc));
             } else if(strcmp(Opcode, "brz")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(0, 1, 0, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(0, 1, 0, &Arg1, pc));
             } else if(strcmp(Opcode, "brn")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(1, 0, 0, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(1, 0, 0, &Arg1, pc));
             } else if(strcmp(Opcode, "brp")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(0, 0, 1, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(0, 0, 1, &Arg1, pc));
             } else if(strcmp(Opcode, "brzp")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(0, 1, 1, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(0, 1, 1, &Arg1, pc));
             } else if(strcmp(Opcode, "brnp")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(1, 0, 1, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(1, 0, 1, &Arg1, pc));
             } else if(strcmp(Opcode, "brnz")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(1, 1, 0, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(1, 1, 0, &Arg1, pc));
             } else if(strcmp(Opcode, "brnzp")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_br(1, 1, 1, &Arg1, pc));
+                printHex(file_out,  encode_instruction_br(1, 1, 1, &Arg1, pc));
             } else if(strcmp(Opcode, "jmp")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_jmp(&Arg1));
+                printHex(file_out,  encode_instruction_jmp(&Arg1));
             } else if(strcmp(Opcode, "ret")==0) {
                 char *base="r7";
-                fprintf(file_out, "0x%04X\n", encode_instruction_jmp(&base));
+                printHex(file_out,  encode_instruction_jmp(&base));
             } else if(strcmp(Opcode, "jsr")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_jsr(&Arg1, pc));
+                printHex(file_out,  encode_instruction_jsr(&Arg1, pc));
             } else if(strcmp(Opcode, "jsrr")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_jsrr(&Arg1));
+                printHex(file_out,  encode_instruction_jsrr(&Arg1));
             } else if(strcmp(Opcode, "not")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_not(&Arg1, &Arg2));
+                printHex(file_out,  encode_instruction_not(&Arg1, &Arg2));
             } else if(strcmp(Opcode, "rti")==0) {
                 fprintf(file_out, "0x8000\n");
             } else if(strcmp(Opcode, "lshf")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_shf(&Arg1, &Arg2, &Arg3,  0, 0));
+                printHex(file_out,  encode_instruction_shf(&Arg1, &Arg2, &Arg3,  0, 0));
             } else if(strcmp(Opcode, "rshfl")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_shf(&Arg1, &Arg2, &Arg3, 0, 1));
+                printHex(file_out,  encode_instruction_shf(&Arg1, &Arg2, &Arg3, 0, 1));
             } else if(strcmp(Opcode, "rshfa")==0) {
-                fprintf(file_out, "0x%04X\n", encode_instruction_shf(&Arg1, &Arg2, &Arg3, 1, 1));
+                printHex(file_out,  encode_instruction_shf(&Arg1, &Arg2, &Arg3, 1, 1));
             } else if(strcmp(Opcode, "nop")==0) {
                 fprintf(file_out, "0x0000\n");
             }
-            pc = pc + 2; 
+            pc = pc + 2;
         }
 
     } while( Ret != DONE );
